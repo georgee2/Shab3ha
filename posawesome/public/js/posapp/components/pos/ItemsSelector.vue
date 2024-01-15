@@ -2,18 +2,52 @@
   <div>
     <v-row>
       <!-- card of items groups -->
-      <v-card class="selection mx-auto grey lighten-5 mt-3 pt-5 pb-5 pl-2 " style="overflow: auto; width: 25%;">
+      <v-card class="selection mx-auto grey lighten-5 mt-3 pt-2 pb-5 pl-2 " style="overflow: auto; width: 25%; max-height: 670px;">
         <v-col>
           <!-- all item groups -->
-          <v-row justify-content="center" align="center" v-for="(index) in all_groups_details" v-show="index.visible" :style="{padding: (index.name === 'ALL')? '0px' : (index.parent_item_group !== 'All Item Groups')? '0px 0px 0px 20px' : '0px'}">
+          <!-- <v-row justify-content="center" align="center" v-for="(index) in all_groups_details" v-show="index.visible" :style="{padding: (index.name === 'ALL')? '0px' : (index.parent_item_group !== 'All Item Groups')? '0px 0px 0px 20px' : '0px'}">
             <div class="card mb-3 mr-1" style="border-radius: 10px;"  @click="selectItem(index.name)">
               <img class="group-image" :src="index.image" alt="image"/>
               <div class="container" :style="{ backgroundColor: index.name === item_group ? '#99FFDD' : '#e5e5e5',}">
                 <h5 style="padding-top: 10px; text-align: center;"><b>{{ index.name }}</b></h5>
               </div>
-            </div>
-          </v-row>
-          
+            </div> -->
+            <div fluid class="items">
+            <v-col dense class="overflow-y-auto">
+              <v-row
+                v-for= "(item, index) in all_groups_details"
+                :key="index"
+                xl="1"
+                lg="1"
+                md="1"
+                sm="1"
+                cols="6"
+                min-height="50"
+                v-show="item.visible"
+                :style="{padding: (item.name === 'ALL')? '0px 0px 10px 0px' : (item.parent_item_group !== 'All Item Groups')? '0px 0px 10px 20px' : '0px 0px 10px 0px'}"
+              >
+                <v-card hover="hover" @click="selectItem(item.name)" style="width: 80%;">
+                  <v-img
+                    :src="
+                      item.image ||
+                      '/assets/posawesome/js/posapp/components/pos/placeholder-image.png'
+                    "
+                    class="white--text align-end"
+                    :gradient="calculateGradient(item)"
+                    
+                  >
+                  </v-img>
+                  <v-card-text
+                      class="text--primary pa-1"
+                    >
+                    <div class="text-caption primary--text">
+                      {{ item.name }}
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-row>
+            </v-col>
+          </div>
         </v-col>
       </v-card>
       <!-- body card -->
@@ -170,7 +204,7 @@
           </v-row>  
         </v-col>
       </v-row>
-      </v-card>    
+      </v-card>
     </v-row>
   </div>
 </template>
@@ -190,7 +224,7 @@ export default {
     loading: false,
     items_group: ['ALL'],
     items_groups_details: [],
-    all_groups_details: [{'name' : 'ALL', 'image' : 'https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.webp?s=2048x2048&w=is&k=20&c=dFWJz1EFJt7Tq2lA-hgTpSW119YywTWtS4EwU3fpKrE=', 'is_group' : 0, 'visible': true}],
+    all_groups_details: [{'name' : 'ALL', 'image' : '/assets/posawesome/js/posapp/components/pos/placeholder-image.png', 'is_group' : 0, 'visible': true}],
     item_group_logo: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmBcgw2neM5l4XgR_eWnLjT88WcnoQjTQzFJV8lJO-rQ&s",],
     items: [],
     search: '',
@@ -223,6 +257,14 @@ export default {
   },
 
   methods: {
+    calculateGradient(index) {
+      // Replace 'yourVariable' with the variable you want to compare with
+      if (index.name === this.item_group) {
+        return 'to bottom, rgba(0,0,0,0), rgba(135,211,124,0.8)';
+      } else {
+        return 'to bottom, rgba(0,0,0,0), rgba(0,0,0,0.4)';
+      }
+    },
     show_offers() {
       evntBus.$emit('show_offers', 'true');
     },
@@ -250,6 +292,7 @@ export default {
       }).then(this.get_items_groups);
     },
     get_items() {
+      console.log("try 3");
       if (!this.pos_profile) {
         console.error('No POS Profile');
         return;
@@ -322,7 +365,7 @@ export default {
               if(object.image !== null){
                 this.all_groups_details.push(object);
               }else{
-                object.image = "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.webp?s=2048x2048&w=is&k=20&c=dFWJz1EFJt7Tq2lA-hgTpSW119YywTWtS4EwU3fpKrE=";
+                object.image = '/assets/posawesome/js/posapp/components/pos/placeholder-image.png';
                 this.all_groups_details.push(object);
               }
             }else if(object.parent_item_group === 'All Item Groups' && object.is_group === 1){
@@ -330,7 +373,7 @@ export default {
               if(object.image !== null){
                 this.all_groups_details.push(object);
               }else{
-                object.image = "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.webp?s=2048x2048&w=is&k=20&c=dFWJz1EFJt7Tq2lA-hgTpSW119YywTWtS4EwU3fpKrE=";
+                object.image = '/assets/posawesome/js/posapp/components/pos/placeholder-image.png';
                 this.all_groups_details.push(object);
               }
               for(var children of this.items_groups_details){

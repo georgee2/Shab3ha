@@ -1332,6 +1332,7 @@ export default {
     },
     update_invoice(doc) {
       const vm = this;
+      console.log("first doc again:" + JSON.stringify(doc));
       frappe.call({
         method: "posawesome.posawesome.api.posapp.update_invoice",
         args: {
@@ -1341,6 +1342,7 @@ export default {
         callback: function (r) {
           if (r.message) {
             vm.invoice_doc = r.message;
+            console.log("second doc:" + JSON.stringify(r.message));
           }
         },
       });
@@ -1348,6 +1350,7 @@ export default {
     },
     proces_invoice() {
       const doc = this.get_invoice_doc();
+      console.log("first doc:" + JSON.stringify(doc));
       if (doc.name) {
         return this.update_invoice(doc);
       } else {
@@ -1376,6 +1379,31 @@ export default {
       const invoice_doc = this.proces_invoice();
       evntBus.$emit("send_invoice_doc_payment", invoice_doc);
     },
+    load_print_page_new() {
+      const print_format =
+        this.pos_profile.print_format_for_online ||
+        this.pos_profile.print_format;
+      const letter_head = this.pos_profile.letter_head || 0;
+      const url =
+        frappe.urllib.get_base_url() +
+        "/printview?doctype=Sales%20Invoice&name=" +
+        this.invoice_doc.name +
+        "&trigger_print=1" +
+        "&format=" +
+        print_format +
+        "&no_letterhead=" +
+        letter_head;
+      const printWindow = window.open(url, "Print");
+      printWindow.addEventListener(
+        "load",
+        function () {
+          printWindow.print();
+          // printWindow.close();
+          // NOTE : uncomoent this to auto closing printing window
+        },
+        true
+      );
+    },
     quick_pay_payment() {
       if (!this.customer) {
         evntBus.$emit("show_mesage", {
@@ -1394,7 +1422,10 @@ export default {
       if (!this.validate()) {
         return;
       }
-      const invoice_doc = this.proces_invoice();
+      let invoice_doc = this.proces_invoice();
+      let data = {"total_change":0,"paid_change":0,"credit_change":0,"redeemed_customer_credit":0,"customer_credit_dict":[],"is_cashback":true};
+      console.log("local" + JSON.stringify(invoice_doc));
+      console.log("this" + JSON.stringify(this.invoice_doc));
       //add notes to the items
       for(var item in this.items) {
         if(this.selectedNotes[this.items[item].posa_row_id]) {
@@ -1410,6 +1441,28 @@ export default {
       }, {});
       console.log(JSON.stringify(groupedItems));
       evntBus.$emit("send_invoice_doc_payment", invoice_doc);
+      frappe.call({
+        method: "posawesome.posawesome.api.posapp.submit_invoice",
+        args: {
+          data: data,
+          invoice: invoice_doc,
+        },
+        async: true,
+        callback: function (r) {
+          if (r.message) {
+            if (print) {
+              vm.load_print_page_new();
+            }
+            evntBus.$emit("set_last_invoice", invoice_doc.name);
+            evntBus.$emit("show_mesage", {
+              text: `Invoice ${r.message.name} is Submited`,
+              color: "success",
+            });
+            frappe.utils.play_sound("submit");
+            this.addresses = [];
+          }
+        },
+      });
       //add name to kitchen items
       // for(var i = 0; i < this.kitchen_items.length; i++){
       //   this.kitchen_items[i]['name'] = invoice_doc['items'][i]['name'];
@@ -1437,39 +1490,26 @@ export default {
       //     }
       //   },
       // });
-      frappe.call({
-        method: "posawesome.posawesome.api.posapp.print_with_ip",
-        args: {
-          receipt_data: groupedItems,
-          order_type: vm.type,
-          customer_type: vm.customer_type,
-          order_name: invoice_doc.name,
-        },
-        callback: function (r) {
-          console.log("print function message: " + r.message);
-        }
-      });
-      // variable1 = "first";
-      // variable2 = "second";
-      // const htmlContent = `<html>
-      // <body>
-      //   <h1>Hello, world!</h1>
-      //   <p>Variable 1: ${variable1}</p>
-      //   <p>Variable 2: ${variable2}</p>
-      // </body>
-      // </html>`;
-      // if(navigator.print) {
-      //   navigator.print({
-      //     printerIp: "192.168.1.100",
-      //     documentContent: htmlContent,
-      //   })
-      // }else {
-      //   console.error('Printing not supported in this browser.');
-      // }
+      //////////////////////////////////////////////////////////////////////////////////////////////////////
+      // frappe.call({
+      //   method: "posawesome.posawesome.api.posapp.print_with_ip",
+      //   args: {
+      //     receipt_data: groupedItems,
+      //     order_type: vm.type,
+      //     customer_type: vm.customer_type,
+      //     order_name: invoice_doc.name,
+      //   },
+      //   callback: function (r) {
+      //     console.log("print function message: " + r.message);
+      //   }
+      // });
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////
       this.items = [];
       this.customer = '';
       this.customer_info = '';
       this.selectedNotes = {};
+      invoice_doc = "";
+      data = "";
     },
     validate() {
       let value = true;

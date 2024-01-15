@@ -468,7 +468,7 @@ def get_customer_names(pos_profile):
         condition += get_customer_group_condition(pos_profile)
         customers = frappe.db.sql(
             """
-            SELECT name, custom_first_mobile, email_id, custom_area, customer_name, custom_department
+            SELECT name, custom_first_mobile, email_id, custom_city, customer_name, custom_first_mobile
             FROM `tabCustomer`
             WHERE {0}
             ORDER by name
@@ -576,32 +576,32 @@ def update_invoice(data):
             for tax in invoice_doc.taxes:
                 tax.included_in_print_rate = 1
     # frappe.set_value()
-    invoice_doc.docstatus = 1
+    # invoice_doc.docstatus = 1
     # invoice_doc.status = "Overdue"
     invoice_doc.save()
 
     # Create Payment
-    payment_doc = frappe.new_doc("Payment Entry")
-    payment_doc.payment_type = "Receive"
-    payment_doc.party_type = "Customer"
-    payment_doc.party = invoice_doc.customer
-    payment_reference = {
-                    "reference_doctype": "Sales Invoice",
-                    "reference_name": invoice_doc.name,
-                    # "allocated_amount": paym.amount,
-                }
+    # payment_doc = frappe.new_doc("Payment Entry")
+    # payment_doc.payment_type = "Receive"
+    # payment_doc.party_type = "Customer"
+    # payment_doc.party = invoice_doc.customer
+    # payment_reference = {
+    #                 "reference_doctype": "Sales Invoice",
+    #                 "reference_name": invoice_doc.name,
+    #                 # "allocated_amount": paym.amount,
+    #             }
 
-    payment_doc.append("references", payment_reference)
-    payment_doc.flags.ignore_permissions = True
-    frappe.flags.ignore_account_permission = True
-    payment_doc.total_amount = flt(invoice_doc.paid_amount)
-    payment_doc.paid_amount = flt(invoice_doc.total)
-    payment_doc.received_amount = flt(invoice_doc.total)
-    payment_doc.target_exchange_rate = 1.0
-    payment_doc.paid_to = "Cash - DS"
-    payment_doc.paid_to_account_currency = "EGP"
-    payment_doc.save()
-    payment_doc.submit()
+    # payment_doc.append("references", payment_reference)
+    # payment_doc.flags.ignore_permissions = True
+    # frappe.flags.ignore_account_permission = True
+    # payment_doc.total_amount = flt(invoice_doc.paid_amount)
+    # payment_doc.paid_amount = flt(invoice_doc.total)
+    # payment_doc.received_amount = flt(invoice_doc.total)
+    # payment_doc.target_exchange_rate = 1.0
+    # payment_doc.paid_to = "Cash - DS"
+    # payment_doc.paid_to_account_currency = "EGP"
+    # payment_doc.save()
+    # payment_doc.submit()
 
     return invoice_doc
 
@@ -801,7 +801,7 @@ def submit_invoice(invoice, data):
             invoice_doc, data, is_payment_entry, total_cash, cash_account, payments
         )
 
-    add_items_to_kitchen_screen(invoice_doc.items)
+    # add_items_to_kitchen_screen(invoice_doc.items)
     return {"name": invoice_doc.name, "status": invoice_doc.docstatus}
 
 def set_batch_nos_for_bundels(doc, warehouse_field, throw=False):

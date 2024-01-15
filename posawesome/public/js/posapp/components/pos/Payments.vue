@@ -21,7 +21,6 @@
               background-color="white"
               hide-details
               :value="formtCurrency(total_payments)"
-              readonly
               :prefix="currencySymbol(invoice_doc.currency)"
               dense
             ></v-text-field>
@@ -911,6 +910,8 @@ export default {
           }
         },
       });
+      this.invoice_doc = "";
+      this.customer_info = "";
     },
     set_full_amount(idx) {
       this.invoice_doc.payments.forEach((payment) => {
